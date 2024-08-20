@@ -1,7 +1,9 @@
+import os
 from flask import Flask
 from flask import request, jsonify, render_template
 from models import db, User, Item
 from config import Config
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -9,6 +11,7 @@ app.config.from_object(Config)
 db.init_app(app)
 
 with app.app_context():
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     db.create_all()
 
 
@@ -44,18 +47,33 @@ def login():
 
 @app.route('/add_item', methods=['POST'])
 def add_item():
-    data = request.json
-    user = User.query.get(data['user_id'])
+    user_id = request.form.get('user_id')
+    name = request.form.get('name')
+    expiry_date = request.form.get('expiry_date')
+    location = request.form.get('location')
+    quantity = request.form.get('quantity')
+    image_file = request.files['image'] if 'image' in request.files else None
+
+    # 画像がアップロードされた場合の処理
+    if image_file:
+        image_filename = secure_filename(image_file.filename)
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
+        image_file.save(image_path)
+    else:
+        image_path = None
+
+    user = User.query.get(user_id)
     item = Item(
-        name=data['name'],
-        image=data.get('image'),
-        expiry_date=data['expiry_date'],
-        location=data['location'],
-        quantity=data['quantity'],
+        name=name,
+        image=image_path,
+        expiry_date=expiry_date,
+        location=location,
+        quantity=quantity,
         owner=user
     )
     db.session.add(item)
     db.session.commit()
+
     return jsonify({"message": "Item added successfully"}), 201
 
 
