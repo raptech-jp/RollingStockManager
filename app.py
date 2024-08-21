@@ -47,14 +47,16 @@ def login():
 
 @app.route('/add_item', methods=['POST'])
 def add_item():
-    user_id = request.form.get('user_id')
-    name = request.form.get('name')
-    expiry_date = request.form.get('expiry_date')
-    location = request.form.get('location')
-    quantity = request.form.get('quantity')
+    data = request.json  # JSONデータの取得
+    user_id = data.get('user_id')
+    name = data.get('name')
+    expiry_date = data.get('expiry_date')
+    location = data.get('location')
+    quantity = data.get('quantity')
+
+    # 画像ファイルの処理
     image_file = request.files['image'] if 'image' in request.files else None
 
-    # 画像がアップロードされた場合の処理
     if image_file:
         image_filename = secure_filename(image_file.filename)
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
