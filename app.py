@@ -17,12 +17,7 @@ with app.app_context():
 
 @app.route('/')
 def hello():
-    return 'Hello, World!'
-
-
-@app.route('/test')
-def home():
-    return render_template('test.html')
+    return render_template('index.html')
 
 
 @app.route('/register', methods=['POST'])
