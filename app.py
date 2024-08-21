@@ -1,12 +1,14 @@
-import os
-from flask import Flask
-from flask import request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 from models import db, User, Item
 from config import Config
 from werkzeug.utils import secure_filename
+import os
+import jwt
+import datetime
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.secret_key = 'secret'  # セッション管理のための秘密鍵
 
 db.init_app(app)
 
@@ -35,23 +37,37 @@ def login():
     data = request.json
     user = User.query.filter_by(username=data['username']).first()
     if user and user.check_password(data['password']):
-        return jsonify({"message": "Login successful"}), 200
+        # JWTトークンを生成
+        token = jwt.encode({
+            'user_id': user.id,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        }, app.secret_key, algorithm='HS256')
+        return jsonify({"message": "Login successful", "token": token}), 200
     else:
         return jsonify({"message": "Invalid username or password"}), 401
 
 
 @app.route('/add_item', methods=['POST'])
 def add_item():
-    data = request.json  # JSONデータの取得
-    user_id = data.get('user_id')
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({"message": "Token is missing"}), 403
+
+    try:
+        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+        user_id = data['user_id']
+    except jwt.ExpiredSignatureError:
+        return jsonify({"message": "Token has expired"}), 403
+    except jwt.InvalidTokenError:
+        return jsonify({"message": "Invalid token"}), 403
+
+    data = request.json
     name = data.get('name')
     expiry_date = data.get('expiry_date')
     location = data.get('location')
     quantity = data.get('quantity')
 
-    # 画像ファイルの処理
     image_file = request.files['image'] if 'image' in request.files else None
-
     if image_file:
         image_filename = secure_filename(image_file.filename)
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
@@ -76,7 +92,18 @@ def add_item():
 
 @app.route('/items', methods=['GET'])
 def get_items():
-    user_id = request.args.get('user_id')
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({"message": "Token is missing"}), 403
+
+    try:
+        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+        user_id = data['user_id']
+    except jwt.ExpiredSignatureError:
+        return jsonify({"message": "Token has expired"}), 403
+    except jwt.InvalidTokenError:
+        return jsonify({"message": "Invalid token"}), 403
+
     items = Item.query.filter_by(user_id=user_id).all()
     return jsonify([{
         "name": item.name,
