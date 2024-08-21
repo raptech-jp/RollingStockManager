@@ -8,7 +8,6 @@ import datetime
 
 app = Flask(__name__)
 app.config.from_object(Config)
-app.secret_key = 'secret'  # セッション管理のための秘密鍵
 
 db.init_app(app)
 
