@@ -104,6 +104,11 @@ def get_items():
     if not token:
         return jsonify({"message": "Token is missing"}), 403
 
+    if token.startswith("Bearer "):
+        token = token[len("Bearer "):]
+    
+    print(token)
+
     try:
         data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
         user_id = data['user_id']
