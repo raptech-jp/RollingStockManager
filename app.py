@@ -55,19 +55,32 @@ def login():
         return jsonify({"message": "Invalid username or password"}), 401
 
 
-@app.route('/add_item', methods=['POST'])
-def add_item():
+def verify_token():
     token = request.headers.get('Authorization')
     if not token:
-        return jsonify({"message": "Token is missing"}), 403
+        return None, jsonify({"message": "Token is missing"}), 403
+
+    if token.startswith("Bearer "):
+        token = token[len("Bearer "):]
 
     try:
         data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
         user_id = data['user_id']
+        user = User.query.get(user_id)
+        if not user:
+            return None, jsonify({"message": "User not found"}), 404
+        return user, None, 200
     except jwt.ExpiredSignatureError:
-        return jsonify({"message": "Token has expired"}), 403
+        return None, jsonify({"message": "Token has expired"}), 403
     except jwt.InvalidTokenError:
-        return jsonify({"message": "Invalid token"}), 403
+        return None, jsonify({"message": "Invalid token"}), 403
+
+
+@app.route('/items', methods=['POST'])
+def add_item():
+    user, error, status = verify_token()
+    if error:
+        return error, status
 
     data = request.json
     name = data.get('name')
@@ -83,7 +96,6 @@ def add_item():
     else:
         image_path = None
 
-    user = User.query.get(user_id)
     item = Item(
         name=name,
         image=image_path,
@@ -100,31 +112,63 @@ def add_item():
 
 @app.route('/items', methods=['GET'])
 def get_items():
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({"message": "Token is missing"}), 403
+    user, error, status = verify_token()
+    if error:
+        return error, status
 
-    if token.startswith("Bearer "):
-        token = token[len("Bearer "):]
-    
-    print(token)
-
-    try:
-        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
-        user_id = data['user_id']
-    except jwt.ExpiredSignatureError:
-        return jsonify({"message": "Token has expired"}), 403
-    except jwt.InvalidTokenError:
-        return jsonify({"message": "Invalid token"}), 403
-
-    items = Item.query.filter_by(user_id=user_id).all()
+    items = Item.query.filter_by(user_id=user.id).all()
     return jsonify([{
+        "id": item.id,
         "name": item.name,
         "expiry_date": item.expiry_date,
         "location": item.location,
         "quantity": item.quantity,
         "is_expiring_soon": item.is_expiring_soon()
     } for item in items]), 200
+
+
+@app.route('/items/<int:item_id>', methods=['PUT'])
+def edit_item(item_id):
+    user, error, status = verify_token()
+    if error:
+        return error, status
+
+    item = Item.query.get(item_id)
+    if not item or item.user_id != user.id:
+        return jsonify({"message": "Item not found or unauthorized"}), 404
+
+    data = request.json
+    item.name = data.get('name', item.name)
+    item.expiry_date = data.get('expiry_date', item.expiry_date)
+    item.location = data.get('location', item.location)
+    item.quantity = data.get('quantity', item.quantity)
+
+    image_file = request.files['image'] if 'image' in request.files else None
+    if image_file:
+        image_filename = secure_filename(image_file.filename)
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
+        image_file.save(image_path)
+        item.image = image_path
+
+    db.session.commit()
+
+    return jsonify({"message": "Item updated successfully"}), 200
+
+
+@app.route('/items/<int:item_id>', methods=['DELETE'])
+def delete_item(item_id):
+    user, error, status = verify_token()
+    if error:
+        return error, status
+
+    item = Item.query.get(item_id)
+    if not item or item.user_id != user.id:
+        return jsonify({"message": "Item not found or unauthorized"}), 404
+
+    db.session.delete(item)
+    db.session.commit()
+
+    return jsonify({"message": "Item deleted successfully"}), 200
 
 
 if __name__ == '__main__':
