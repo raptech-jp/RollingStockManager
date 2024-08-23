@@ -43,7 +43,7 @@ def register():
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
-    user = User.query.filter_by(username=data['username']).first()
+    user = User.query.filter_by(email=data['email']).first()
     if user and user.check_password(data['password']):
         # JWTトークンを生成
         token = jwt.encode({
@@ -52,7 +52,7 @@ def login():
         }, app.secret_key, algorithm='HS256')
         return jsonify({"message": "Login successful", "token": token}), 200
     else:
-        return jsonify({"message": "Invalid username or password"}), 401
+        return jsonify({"message": "Invalid email or password"}), 401
 
 
 def verify_token():
