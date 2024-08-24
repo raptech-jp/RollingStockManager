@@ -75,7 +75,7 @@ def login():
         # JWTトークンを生成
         token = jwt.encode({
             'user_id': user.id,
-            'exp': datetime.utcnow() + timedelta(hours=1)
+            'exp': datetime.utcnow() + timedelta(hours=12)
         }, app.secret_key, algorithm='HS256')
         return jsonify({"message": "Login successful", "token": token}), 200
     else:
