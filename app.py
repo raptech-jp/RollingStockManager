@@ -4,7 +4,7 @@ from config import Config
 from werkzeug.utils import secure_filename
 import os
 import jwt
-import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -75,7 +75,7 @@ def login():
         # JWTトークンを生成
         token = jwt.encode({
             'user_id': user.id,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+            'exp': datetime.utcnow() + timedelta(hours=1)
         }, app.secret_key, algorithm='HS256')
         return jsonify({"message": "Login successful", "token": token}), 200
     else:
@@ -111,9 +111,15 @@ def add_item():
 
     data = request.json
     name = data.get('name')
-    expiry_date = data.get('expiry_date')
+    expiry_date_str = data.get('expiry_date')
     location = data.get('location')
     quantity = data.get('quantity')
+
+    try:
+        expiry_date_obj = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+    except ValueError as e:
+        return jsonify({"error": f"Invalid date format: {e}"}), 400
+
 
     image_file = request.files['image'] if 'image' in request.files else None
     if image_file:
@@ -126,7 +132,7 @@ def add_item():
     item = Item(
         name=name,
         image=image_path,
-        expiry_date=expiry_date,
+        expiry_date=expiry_date_obj,
         location=location,
         quantity=quantity,
         owner=user
@@ -166,7 +172,14 @@ def edit_item(item_id):
 
     data = request.json
     item.name = data.get('name', item.name)
-    item.expiry_date = data.get('expiry_date', item.expiry_date)
+    
+    expiry_date_str = data.get('expiry_date')
+    if expiry_date_str:
+        try:
+            item.expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+        except ValueError as e:
+            return jsonify({"message": f"Invalid date format: {e}"}), 400
+
     item.location = data.get('location', item.location)
     item.quantity = data.get('quantity', item.quantity)
 
