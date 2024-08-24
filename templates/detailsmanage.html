@@ -8,8 +8,19 @@
 </head>
 <body>
     <div class="container">
-        <h1>通知</h1>
+        <h1>管理</h1>
+        
         <input type="button" onclick="location.href='/'" value="ホームへ">
+        <p>ID: {{id}}<span id="item-id" data-id="{{ id }}"></span></p>
+        
+        <label>名前<input type="text"></label>
+        <label>使用期限<input type="date"></label>
+        <label>保管場所<input type="text"></label>
+        <label>個数<input type="text"></label>
+        
+        <input type="submit" value="変更を保存">
+        <input type="submit" value="削除">
+        <script src="{{ url_for('static', filename='/script.js') }}"></script>
     </div>
 </body>
 </html>
