@@ -3,18 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>新規登録</title>
+    <script src="script.js" defer></script>
 </head>
 <body>
     <h1>新規登録</h1>
     
-    <input type="button" value="ホームへ">
+    <input type="button" value="ホームへ" onclick="window.location.href='/'">
 
-    <label>ユーザー名<input type="text"></label>
-    <label>メールアドレス<input type="email" placeholder="info@sample.com"></label>
-    <label>パスワード<input type="password"></label>
-    
-    <input type="submit" value="新規登録">
+    <form id="registration-form">
+        <label for="username">ユーザー名:
+            <input type="text" id="username" name="username" required>
+        </label><br>
 
+        <label for="email">メールアドレス:
+            <input type="email" id="email" name="email" placeholder="info@sample.com" required>
+        </label><br>
+
+        <label for="password">パスワード:
+            <input type="password" id="password" name="password" required>
+        </label><br>
+
+        <input type="submit" value="新規登録">
+    </form>
 </body>
 </html>

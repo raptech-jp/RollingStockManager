@@ -3,19 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>ユーザー登録</title>
+    <script src="script.js" defer></script>
 </head>
 <body>
     <h1>登録</h1>
     
-    <input type="button" value="ホームへ">
-    <label>ファイルを選択<input type="file" accept="image/png, image/jpeg"></label>
-
-    <label>名前<input type="text"></label>
-    <label>使用期限<input type="date"></label>
-    <label>保管場所<input type="text"></label>
-    <label>個数<input type="text"></label>
+    <input type="button" value="ホームへ" onclick="window.location.href='/'">
     
-    <input type="submit" value="登録">
+    <form id="registration-form">
+        <label for="file">ファイルを選択:
+            <input type="file" id="file" accept="image/png, image/jpeg">
+        </label><br>
+
+        <label for="name">名前:
+            <input type="text" id="name" name="name" required>
+        </label><br>
+
+        <label for="expiry-date">使用期限:
+            <input type="date" id="expiry-date" name="expiry-date" required>
+        </label><br>
+
+        <label for="storage-location">保管場所:
+            <input type="text" id="storage-location" name="storage-location" required>
+        </label><br>
+
+        <label for="quantity">個数:
+            <input type="text" id="quantity" name="quantity" required>
+        </label><br>
+
+        <input type="button" value="登録" id="submitButton">
+    </form>
 </body>
 </html>
