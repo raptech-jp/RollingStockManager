@@ -64,8 +64,6 @@ def register():
     user.set_password(password)
     db.session.add(user)
     db.session.commit()
-    print ("username")
-    print("email")
     return jsonify({"message": "User registered successfully"}), 201
 
 
