@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 import jwt
 from datetime import datetime, timedelta
+import secrets
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -14,6 +15,18 @@ db.init_app(app)
 with app.app_context():
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     db.create_all()
+
+
+def generate_refresh_token():
+    return secrets.token_hex(32)
+
+
+def save_refresh_token(user):
+    refresh_token = generate_refresh_token()
+    user.refresh_token = refresh_token
+    user.token_expiration = datetime.utcnow() + timedelta(days=7)
+    db.session.commit()
+    return refresh_token
 
 
 @app.route('/')
@@ -45,7 +58,7 @@ def manage_page():
 def notice_page():
     return render_template('notice.html')
 
-# API
+# API Endpoints
 
 
 @app.route('/register', methods=['POST'])
@@ -55,7 +68,6 @@ def register():
     email = data.get('email')
     password = data.get('password')
 
-    # Check if email already exists
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
         return jsonify({"message": "Email already exists"}), 400
@@ -72,12 +84,17 @@ def login():
     data = request.json
     user = User.query.filter_by(email=data['email']).first()
     if user and user.check_password(data['password']):
-        # JWTトークンを生成
         token = jwt.encode({
             'user_id': user.id,
-            'exp': datetime.utcnow() + timedelta(hours=12)
+            'exp': datetime.utcnow() + timedelta(hours=1)
         }, app.secret_key, algorithm='HS256')
-        return jsonify({"message": "Login successful", "token": token}), 200
+        refresh_token = save_refresh_token(user)
+
+        return jsonify({
+            "message": "Login successful",
+            "token": token,
+            "refresh_token": refresh_token
+        }), 200
     else:
         return jsonify({"message": "Invalid email or password"}), 401
 
@@ -103,6 +120,31 @@ def verify_token():
         return None, jsonify({"message": "Invalid token"}), 403
 
 
+@app.route('/refresh', methods=['POST'])
+def refresh_token():
+    data = request.json
+    refresh_token = data.get('refresh_token')
+    if not refresh_token:
+        return jsonify({"message": "Refresh token is missing"}), 403
+
+    user = User.query.filter_by(refresh_token=refresh_token).first()
+    if not user:
+        return jsonify({"message": "Invalid refresh token"}), 403
+
+    if user.token_expiration < datetime.utcnow():
+        return jsonify({"message": "Refresh token has expired"}), 403
+
+    token = jwt.encode({
+        'user_id': user.id,
+        'exp': datetime.utcnow() + timedelta(hours=1)
+    }, app.secret_key, algorithm='HS256')
+
+    return jsonify({
+        "message": "Token refreshed successfully",
+        "token": token
+    }), 200
+
+
 @app.route('/items', methods=['POST'])
 def add_item():
     user, error, status = verify_token()
@@ -119,7 +161,6 @@ def add_item():
         expiry_date_obj = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
     except ValueError as e:
         return jsonify({"error": f"Invalid date format: {e}"}), 400
-
 
     image_file = request.files['image'] if 'image' in request.files else None
     if image_file:
@@ -172,11 +213,12 @@ def edit_item(item_id):
 
     data = request.json
     item.name = data.get('name', item.name)
-    
+
     expiry_date_str = data.get('expiry_date')
     if expiry_date_str:
         try:
-            item.expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+            item.expiry_date = datetime.strptime(
+                expiry_date_str, '%Y-%m-%d').date()
         except ValueError as e:
             return jsonify({"message": f"Invalid date format: {e}"}), 400
 
