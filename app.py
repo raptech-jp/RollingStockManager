@@ -160,33 +160,38 @@ def add_item():
     if error:
         return error, status
 
-    data = request.json
-    name = data.get('name')
-    expiry_date_str = data.get('expiry_date')
-    location = data.get('location')
-    quantity = data.get('quantity')
+    # フォームデータの取得
+    name = request.form.get('name')
+    expiry_date_str = request.form.get('expiry_date')
+    location = request.form.get('location')
+    quantity = request.form.get('quantity')
 
     try:
         expiry_date_obj = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
     except ValueError as e:
         return jsonify({"error": f"Invalid date format: {e}"}), 400
 
-    image_file = request.files['image'] if 'image' in request.files else None
+    # ファイルの取得
+    image_file = request.files.get('file')
     if image_file:
         image_filename = secure_filename(image_file.filename)
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
         image_file.save(image_path)
+        # クライアントに公開するパスを設定
+        public_image_path = os.path.join('static/uploads', image_filename)
     else:
-        image_path = None
+        public_image_path = None
 
+    # アイテムの追加
     item = Item(
         name=name,
-        image=image_path,
+        image=public_image_path,
         expiry_date=expiry_date_obj,
         location=location,
         quantity=quantity,
         owner=user
     )
+    
     db.session.add(item)
     db.session.commit()
 
@@ -203,6 +208,7 @@ def get_items():
     return jsonify([{
         "id": item.id,
         "name": item.name,
+        "image":item.image,
         "expiry_date": item.expiry_date,
         "location": item.location,
         "quantity": item.quantity,

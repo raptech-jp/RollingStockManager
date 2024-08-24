@@ -1,241 +1,244 @@
-// /manage/<int:id> にアクセスしたときに、そのIDを取得する
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    const itemId = document.querySelector('#item-id').getAttribute('data-id');
-    console.log('Item ID:', itemId);
+    if (document.getElementById('registration-form')) {
+        const registerForm = document.getElementById('registration-form');
+
+        registerForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(registerForm);
+            const data = {
+                email: formData.get('email'),
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert('登録が完了しました。');
+                    registerForm.reset();
+                    window.location.href = '/login';
+                } else {
+                    alert('登録に失敗しました。');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('エラーが発生しました。');
+            }
+        });
+    }
+
+    if (document.getElementById('login-form')) {
+        const loginForm = document.getElementById('login-form');
+
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(loginForm);
+            const data = {
+                email: formData.get('email'),
+                password: formData.get('password')
+            };
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const responseData = await response.json();
+                    alert('ログインに成功しました。');
+                    loginForm.reset();
+                    document.cookie = `token=${responseData.token}; path=/`;
+                    document.cookie = `refresh_token=${responseData.refresh_token}; path=/`;
+
+                    window.location.href = '/';
+                } else {
+                    alert('ログインに失敗しました。');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('エラーが発生しました。');
+            }
+        });
+    }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    function handleFormSubmission(formId, url, method, successCallback) {
-        const form = document.getElementById(formId);
-        if (form) {
-            form.addEventListener('submit', (event) => {
-                event.preventDefault();
-                const formData = new FormData(form);
-                fetch(url, {
-                    method: method,
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        alert(data.message);
-                        if (successCallback) successCallback(data);
-                    } else {
-                        alert("Failed: " + data.message);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            });
-        }
+async function fetchWithAuth(url, options = {}) {
+    const token = getCookie('token');
+
+    if (!token) {
+        throw new Error('No token available');
     }
 
-    // ユーザー登録の関数
-    function registerUser(username, email, password) {
-        // POSTリクエストでデータをサーバーに送信
-        fetch('/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json' // データの形式を指定
-            },
-            body: JSON.stringify({
-                username: username,
-                email: email,
-                password: password
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                // ステータスコードが 200 以外の場合はエラーとして処理
-                return response.json().then(data => {
-                    throw new Error(data.message || 'Unknown error occurred');
-                });
-            }
-            return response.json(); // 成功時は JSON データを返す
-        })
-        .then(data => {
-            if (data.message === "User registered successfully") {
-                alert("ユーザー登録が成功しました！");
-                // 必要に応じて、登録後のリダイレクトやフォームのリセットなど
-            } else {
-                alert("ユーザー登録に失敗しました: " + data.message);
-            }
-        })
-        .catch(error => {
-            // エラー時の処理
-            console.error('登録中にエラーが発生しました:', error);
-            alert("登録中にエラーが発生しました: " + error.message);
-        });
-    }
+    options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+    };
 
+    try {
+        const response = await fetch(url, options);
 
-    // ログイン関数
-    function loginUser(email, password) {
-        fetch('/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                email: email,
-                password: password
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => {
-                    throw new Error(data.message || 'Unknown error occurred');
-                });
-            }
+        if (response.ok) {
             return response.json();
-        })
-        .then(data => {
-            if (data.message === "Login successful") {
-                // トークンをローカルストレージに保存
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('refreshToken', data.refresh_token);
-                alert("ログイン成功！");
+        } else if (response.status === 401 || response.status === 403) {
+            const newToken = await refreshToken();
+            if (newToken) {
+                document.cookie = `token=${newToken.token}; path=/`;
+                return fetchWithAuth(url, options);
             } else {
-                alert("ログインに失敗しました: " + data.message);
+                throw new Error('Unable to refresh token');
             }
-        })
-        .catch(error => {
-            console.error('ログイン中にエラーが発生しました:', error);
-            alert("ログイン中にエラーが発生しました: " + error.message);
-        });
-    }
-    function handleLogin() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        loginUser(email, password);
-    }
-
-
-    // トークン検証関数
-    function verifyToken() {
-        const token = localStorage.getItem('authToken');
-        
-        if (!token) {
-            alert("トークンが存在しません。ログインしてください。");
-            return;
+        } else {
+            throw new Error('Network response was not ok');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
 
-        fetch('/verify', {
+async function refreshToken() {
+    const refreshToken = getCookie('refresh_token');
+
+    if (!refreshToken) {
+        throw new Error('No refresh token available');
+    }
+
+    try {
+        const response = await fetch('/refresh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        } else {
+            throw new Error('Failed to refresh token');
+        }
+    } catch (error) {
+        console.error('Error refreshing token:', error);
+        return null;
+    }
+}
+
+async function getItems() {
+    try {
+        const items = await fetchWithAuth('/items');
+        console.log('Items:', items);
+    } catch (error) {
+        console.error('Error fetching items:', error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.location.pathname === '/manage') {
+        const token = getCookie('token');
+        fetch('/items',{
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => {
-                    throw new Error(data.message || 'Unknown error occurred');
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.message === "Token is valid") {
-                alert("トークンは有効です！");
-                // トークンが有効な場合の処理
-                // 例: ユーザーの情報を表示する
-            } else {
-                alert("トークンの検証に失敗しました: " + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('トークン検証中にエラーが発生しました:', error);
-            alert("トークン検証中にエラーが発生しました: " + error.message);
-        });
-    }
+        }) // APIのURLを指定
+            .then(response => response.json())
+            .then(data => {
+                // Check if data is an array
+                if (!Array.isArray(data)) {
+                    console.error('Data is not an array:', data);
+                    return;
+                }
 
+                const itemsContainer = document.getElementById('items-container');
 
-    function fetchItems() {
-        fetch('/items', {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        })
-        .then(response => response.json())
-        .then(items => {
-            const itemsContainer = document.getElementById('items-container');
-            if (itemsContainer) {
-                itemsContainer.innerHTML = '';
-                items.forEach(item => {
-                    const itemElement = document.createElement('div');
-                    itemElement.innerHTML = `
-                        <p>Name: ${item.name}</p>
-                        <p>Expiry Date: ${item.expiry_date}</p>
-                        <p>Location: ${item.location}</p>
-                        <p>Quantity: ${item.quantity}</p>
-                        <p>Expiring Soon: ${item.is_expiring_soon ? 'Yes' : 'No'}</p>
+                data.forEach(item => {
+                    // カード要素を作成
+                    const card = document.createElement('div');
+                    card.className = 'col-md-4 item-card';
+    
+                    // 画像の処理
+                    const imageUrl = item.image ? item.image : 'placeholder.png';
+    
+                    // 有効期限の日付形式を変換
+                    const expiryDate = new Date(item.expiry_date).toLocaleDateString('ja-JP');
+    
+                    card.innerHTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">${item.name}</h5>
+                                <img src="${imageUrl}" alt="${item.name}" class="img-fluid item-image">
+                                <p class="card-text">使用期限: ${expiryDate}</p>
+                                <p class="card-text">場所: ${item.location}</p>
+                                <p class="card-text">個数: ${item.quantity}</p>
+                                ${item.is_expiring_soon ? '<span class="badge badge-warning">まもなく期限切れ</span>' : ''}
+                            </div>
+                        </div>
                     `;
-                    itemsContainer.appendChild(itemElement);
+                    itemsContainer.appendChild(card);
                 });
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        }
+});
 
-    function editItem(itemId, data) {
-        fetch(`/items/${itemId}`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-            body: data
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message === "Item updated successfully") {
-                alert("Item updated successfully!");
-            } else {
-                alert("Failed to update item: " + data.message);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    const itemForm = document.getElementById('item-form');
 
-    function deleteItem(itemId) {
-        fetch(`/items/${itemId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json', // 必要に応じて Content-Type ヘッダーを追加
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}` // 認証トークンをヘッダーに追加
+    if (itemForm) {
+        itemForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            // FormData オブジェクトの作成
+            const formData = new FormData(itemForm);
+
+            // ファイルが選択されている場合は FormData に追加
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
             }
-        })
-        .then(response => {
-            if (!response.ok) {
-                // ステータスコードが 200 でない場合はエラーとして処理
-                return response.json().then(data => {
-                    throw new Error(data.message || 'Unknown error occurred');
+
+            try {
+                // /items へ POST リクエストを送信
+                const response = await fetch('/items', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getCookie('token')}`,
+                    },
+                    body: formData // FormData オブジェクトを送信
                 });
+
+                if (response.ok) {
+                    alert('アイテムが正常に追加されました。');
+                    itemForm.reset(); // フォームをリセット
+                } else {
+                    alert('アイテムの追加に失敗しました。');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('エラーが発生しました。');
             }
-            return response.json(); // 成功時は JSON データを返す
-        })
-        .then(data => {
-            if (data.message === "Item deleted successfully") {
-                alert("アイテムが削除されました！");
-                // 必要に応じて、削除後のUIの更新処理をここに追加
-            } else {
-                alert("アイテムの削除に失敗しました: " + data.message);
-            }
-        })
-        .catch(error => {
-            // エラー時の処理
-            console.error('削除中にエラーが発生しました:', error);
-            alert("削除中にエラーが発生しました: " + error.message);
         });
     }
-    
-
-    // Initialize forms
-    handleFormSubmission('registration-form', '/register', 'POST', registerUser);
-    handleFormSubmission('login-form', '/login', 'POST', loginUser);
-    handleFormSubmission('item-form', '/items', 'POST');
-    handleFormSubmission('edit-item-form', `/items/${document.getElementById('item-id').value}`, 'PUT');
-    handleFormSubmission('delete-item-form', `/items/${document.getElementById('delete-item-id').value}`, 'DELETE');
-    
-    // Fetch items on page load if required
-    fetchItems();
 });

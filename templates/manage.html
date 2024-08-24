@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
     <title>管理</title>
 </head>
+
 <body>
     <div class="container">
         <div class="text-center grid gap-0 row-gap-3">
@@ -18,7 +20,7 @@
                     <input type="button" onclick="location.href='/'" class="btn btn-light" value="ホームへ">
                 </div>
             </div>
-        
+
             <div class="field row">
                 <div class="col">
                     <h3>保管場所:</h3>
@@ -29,5 +31,9 @@
             </div>
         </div>
     </div>
+    <div id="items-container" class="row"></div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
 </body>
+
 </html>
