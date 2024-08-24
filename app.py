@@ -63,6 +63,10 @@ def detail_page(id):
 def notice_page():
     return render_template('notice.html')
 
+
+@app.route('/manual', methods=['GET'])
+def manual_page():
+    return render_template('manual.html')
 # API Endpoints
 
 
