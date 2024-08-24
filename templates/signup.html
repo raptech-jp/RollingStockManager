@@ -25,20 +25,25 @@
             </div>
         </div>
 
-        <form id="registration-form">
-            <label for="username">ユーザー名:
-                <input type="text" id="username" name="username" required>
-            </label><br>
-
-            <label for="email">メールアドレス:
-                <input type="email" id="email" name="email" placeholder="info@sample.com" required>
-            </label><br>
-
-            <label for="password">パスワード:
-                <input type="password" id="password" name="password" required>
-            </label><br>
-    <input type="submit" class="btn btn-custom" value="新規登録">
-    </form>
+        <div class="d-flex flex-column mb-3">
+            <form id="registration-form">
+                <div class="p-2">
+                    <label for="username">ユーザー名:
+                        <input type="text" id="username" name="username" required>
+                    </label>
+                </div>
+                <div class="p-2">
+                    <label for="email">メールアドレス:
+                        <input type="email" id="email" name="email" placeholder="info@sample.com" required>
+                    </label>
+                </div>
+                <div class="p-2">
+                    <label for="password">パスワード:
+                        <input type="password" id="password" name="password" required>
+                    </label>
+                </div>
+                <input type="submit" class="btn btn-custom" value="新規登録">
+            </form>
 
     <script>
         // ユーザー登録の関数
