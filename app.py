@@ -21,6 +21,33 @@ def hello():
     return render_template('index.html')
 
 
+@app.route('/signup', methods=['GET'])
+def register_page():
+    return render_template('signup.html')
+
+
+@app.route('/login', methods=['GET'])
+def login_page():
+    return render_template('login.html')
+
+
+@app.route('/register', methods=['GET'])
+def register_page():
+    return render_template('register.html')
+
+
+@app.route('/manage', methods=['GET'])
+def manage_page():
+    return render_template('manage.html')
+
+
+@app.route('/notice', methods=['GET'])
+def notice_page():
+    return render_template('notice.html')
+
+# API
+
+
 @app.route('/register', methods=['POST'])
 def register():
     data = request.json
