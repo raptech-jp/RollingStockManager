@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
     <title>使い方</title>
 </head>
 <body>
@@ -19,25 +21,53 @@
                 </div>
             </div>
         </div>
-        
-        <p>（アプリ名）はローリングストックをする物の期限を管理するアプリです。</p>
-        <p></p>
-        <!--<p>期限が短いものなどは通知が来るタイミングを設定することも可能です。</p>-->
 
-        <h2>アカウント管理</h2>
-        <p>初めての方は新規登録、既にアカウントがある方はログインをして内容を保存できます。</p>
+        <div class="text-center flex">
+            <p>（アプリ名）はローリングストックをする物の期限を管理するアプリです。</p>
+            <p></p>
+            <!--<p>期限が短いものなどは通知が来るタイミングを設定することも可能です。</p>-->    
+            <span class="border how2use account">
+                <img src="/static/images/setting.png" alt="">
+                <h2>アカウント管理</h2>
+            </span>
+            <span class="intro">
+                <p>初めての方は新規登録、既にアカウントがある方はログインをして内容を保存できます。</p>
+            </span>
 
-        <h2>ローリングストックをする物の登録</h2>
-        <p>写真、名前、期限などを登録してわかりやすく管理することができます。</p>
-
-        <h2>登録した物の管理</h2>
-        <p>登録した物の一覧を見ることができます。</p>
-        <p>(フィルターの説明)</p>
-        <p>変更したい物を選択すると登録した内容の変更や削除ができます。</p>
-
-        <h2>通知</h2>
-        <p>期限1か月前の食品や防災用品点検の日の通知が表示されます。</p>
-
+            <div class="grid gap-0 row-gap-3">
+                <div class="row p-2 g-col-6">
+                    <div class="col">
+                        <span class="border how2use">
+                            <img src="/static/images/register.png" alt="">
+                            <h2>備蓄品の登録</h2>
+                        </span>
+                        <span class="intro">
+                            <p>写真、名前、期限などを登録してわかりやすく管理することができます。</p>
+                        </span>
+                    </div>
+                    <div class="col">
+                        <span class="border how2use">
+                            <img src="/static/images/manage.png" alt="">
+                            <h2>登録した物の管理</h2>
+                        </span>
+                        <span class="intro">
+                            <p>登録した物の一覧を見ることができます。</p>
+                            <p>(フィルターの説明)</p>
+                            <p>変更したい物を選択すると登録した内容の変更や削除ができます。</p>
+                        </span>
+                    </div>
+                    <div class="col">
+                        <span class="border how2use">
+                            <img src="/static/images/notice.png" alt="">
+                            <h2>通知</h2>
+                        </span>
+                        <span class="intro">
+                            <p>期限1か月前の食品や防災用品点検の日の通知が表示されます。</p>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

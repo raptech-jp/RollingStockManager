@@ -65,6 +65,42 @@ body {
     font-size: 16px;
 }
 
-.under-margin {
-    margin: 0,0,0,100px;
+.how2use {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* アイコンとテキストの間隔を調整 */
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: rgba(226, 166, 95, 0.71);
+    cursor: pointer;
+    border-radius:30px;
+    color:#ffffff;
+}
+.how2use img {
+    width: 30px; /* アイコンのサイズを調整 */
+    height: auto;
+    margin-left: 5%;
+}
+
+.flex {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.account {
+    width: 30%;
+}
+
+.intro {
+    align-items: center;
+    gap: 10px; /* アイコンとテキストの間隔を調整 */
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    border-radius:30px;
+    background-color: #ffffff;
+    width: 30%;
 }
