@@ -1,0 +1,28 @@
+.btn-custom {
+    background-color: #E2A65F;
+    color: #ffffff;
+    opacity: 0.71;
+    border-radius:30px;
+}
+.imagePreview {
+    width: 100%;
+    height: 180px;
+    background-position: center center;
+    background-size: cover;
+    -webkit-box-shadow: 0 0 1px 1px rgba(0, 0, 0, .3);
+    display: inline-block;
+}
+#preview img {
+    height: 25vh; /* ウィンドウの高さの30% */
+    width: auto; /* アスペクト比を維持するために自動調整 */
+    margin: 5px;
+    object-fit: contain; /* 画像のサイズをウィンドウに合わせて調整 */
+}
+.btn-secondary {
+    border-radius:30px;
+}
+.text-image-container img {
+    max-height: 2.0rem;
+    width: 2.0rem;
+    margin-right: 1rem;
+}
