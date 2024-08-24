@@ -115,18 +115,35 @@ document.addEventListener('DOMContentLoaded', () => {
     function deleteItem(itemId) {
         fetch(`/items/${itemId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message === "Item deleted successfully") {
-                alert("Item deleted successfully!");
-            } else {
-                alert("Failed to delete item: " + data.message);
+            headers: {
+                'Content-Type': 'application/json', // 必要に応じて Content-Type ヘッダーを追加
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}` // 認証トークンをヘッダーに追加
             }
         })
-        .catch(error => console.error('Error:', error));
+        .then(response => {
+            if (!response.ok) {
+                // ステータスコードが 200 でない場合はエラーとして処理
+                return response.json().then(data => {
+                    throw new Error(data.message || 'Unknown error occurred');
+                });
+            }
+            return response.json(); // 成功時は JSON データを返す
+        })
+        .then(data => {
+            if (data.message === "Item deleted successfully") {
+                alert("アイテムが削除されました！");
+                // 必要に応じて、削除後のUIの更新処理をここに追加
+            } else {
+                alert("アイテムの削除に失敗しました: " + data.message);
+            }
+        })
+        .catch(error => {
+            // エラー時の処理
+            console.error('削除中にエラーが発生しました:', error);
+            alert("削除中にエラーが発生しました: " + error.message);
+        });
     }
+    
 
     // Initialize forms
     handleFormSubmission('registration-form', '/register', 'POST', registerUser);
