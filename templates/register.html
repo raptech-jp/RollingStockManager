@@ -12,6 +12,20 @@
           opacity: 0.71;
           border-radius:30px;
         }
+        .imagePreview {
+            width: 100%;
+            height: 180px;
+            background-position: center center;
+            background-size: cover;
+            -webkit-box-shadow: 0 0 1px 1px rgba(0, 0, 0, .3);
+            display: inline-block;
+        }
+        #preview img {
+            height: 25vh; /* ウィンドウの高さの30% */
+            width: auto; /* アスペクト比を維持するために自動調整 */
+            margin: 5px;
+            object-fit: contain; /* 画像のサイズをウィンドウに合わせて調整 */
+        }
     </style>
 </head>
 <body>
@@ -27,7 +41,12 @@
 
         <div class="d-flex flex-column mb-3">
             <div class="p-2">
-                <label>ファイルを選択<input type="file" accept="image/png, image/jpeg"></label>
+                <div class="imagePreview" id="preview"></div>
+                <label>
+                    <span class="btn btn-custom">
+                        ファイルを選択<input type="file" id="fileInput" style="display:none" accept="image/png, image/jpeg">
+                    </span>
+                </label>
             </div>
             <div class="p-2">
                 <label>名前<input type="text"></label>
@@ -46,5 +65,26 @@
         <input type="submit" class="btn btn-custom" value="登録">
     </div>
 
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const previewContainer = document.getElementById('preview');
+            
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    previewContainer.innerHTML = ''; // 以前のプレビューをクリア
+                    previewContainer.appendChild(img);
+                };
+                
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.innerHTML = 'Please select a valid image file.';
+            }
+        });
+    </script>
 </body>
 </html>
