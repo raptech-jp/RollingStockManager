@@ -29,3 +29,38 @@
     width: 2.0rem;
     margin-right: 1rem;
 }
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px; /* アイテム間の間隔を調整 */
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* アイコンとテキストの間隔を調整 */
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background-color: #e0e0e0; /* ホバー時の背景色を変更 */
+}
+
+.menu-item img {
+    width: 30px; /* アイコンのサイズを調整 */
+    height: auto;
+}
+
+.menu-item span {
+    font-size: 16px;
+}
