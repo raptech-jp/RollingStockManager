@@ -22,7 +22,7 @@ def hello():
 
 
 @app.route('/signup', methods=['GET'])
-def register_page():
+def signup_page():
     return render_template('signup.html')
 
 
