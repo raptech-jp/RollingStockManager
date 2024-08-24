@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>新規登録</title>
 </head>
 <body>
     <h1>新規登録</h1>
     
-    <input type="button" value="ホームへ">
+    <input type="button" value="ホームへ" onclick="location.href='/'">
 
     <form id="registration-form">
         <label for="username">ユーザー名:
@@ -25,5 +25,58 @@
 
         <input type="submit" value="新規登録">
     </form>
+
+    <script>
+        // ユーザー登録の関数
+        function registerUser(username, email, password) {
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json' // データの形式を指定
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // ステータスコードが 200 以外の場合はエラーとして処理
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Unknown error occurred');
+                    });
+                }
+                return response.json(); // 成功時は JSON データを返す
+            })
+            .then(data => {
+                if (data.message === "User registered successfully") {
+                    alert("ユーザー登録が成功しました！");
+                    // 必要に応じて、登録後のリダイレクトやフォームのリセットなど
+                    document.getElementById('registration-form').reset();
+                } else {
+                    alert("ユーザー登録に失敗しました: " + data.message);
+                }
+            })
+            .catch(error => {
+                // エラー時の処理
+                console.error('登録中にエラーが発生しました:', error);
+                alert("登録中にエラーが発生しました: " + error.message);
+            });
+        }
+
+        // フォーム送信イベントの処理
+        document.getElementById('registration-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // デフォルトのフォーム送信を防ぐ
+
+            // フォームからデータを取得
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // ユーザー登録関数を呼び出し
+            registerUser(username, email, password);
+        });
+    </script>
 </body>
 </html>

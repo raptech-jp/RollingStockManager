@@ -32,42 +32,126 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function registerUser(data) {
+    // ユーザー登録の関数
+    function registerUser(username, email, password) {
+        // POSTリクエストでデータをサーバーに送信
         fetch('/register', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            headers: {
+                'Content-Type': 'application/json' // データの形式を指定
+            },
+            body: JSON.stringify({
+                username: username,
+                email: email,
+                password: password
+            })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                // ステータスコードが 200 以外の場合はエラーとして処理
+                return response.json().then(data => {
+                    throw new Error(data.message || 'Unknown error occurred');
+                });
+            }
+            return response.json(); // 成功時は JSON データを返す
+        })
         .then(data => {
             if (data.message === "User registered successfully") {
-                alert("Registration successful!");
-                window.location.href = '/login';
+                alert("ユーザー登録が成功しました！");
+                // 必要に応じて、登録後のリダイレクトやフォームのリセットなど
             } else {
-                alert("Registration failed: " + data.message);
+                alert("ユーザー登録に失敗しました: " + data.message);
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            // エラー時の処理
+            console.error('登録中にエラーが発生しました:', error);
+            alert("登録中にエラーが発生しました: " + error.message);
+        });
     }
 
-    function loginUser(data) {
+
+    // ログイン関数
+    function loginUser(email, password) {
         fetch('/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || 'Unknown error occurred');
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.message === "Login successful") {
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('refresh_token', data.refresh_token);
-                window.location.href = '/manage';
+                // トークンをローカルストレージに保存
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('refreshToken', data.refresh_token);
+                alert("ログイン成功！");
             } else {
-                alert("Login failed: " + data.message);
+                alert("ログインに失敗しました: " + data.message);
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('ログイン中にエラーが発生しました:', error);
+            alert("ログイン中にエラーが発生しました: " + error.message);
+        });
     }
+    function handleLogin() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        loginUser(email, password);
+    }
+
+
+    // トークン検証関数
+    function verifyToken() {
+        const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+            alert("トークンが存在しません。ログインしてください。");
+            return;
+        }
+
+        fetch('/verify', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || 'Unknown error occurred');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.message === "Token is valid") {
+                alert("トークンは有効です！");
+                // トークンが有効な場合の処理
+                // 例: ユーザーの情報を表示する
+            } else {
+                alert("トークンの検証に失敗しました: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('トークン検証中にエラーが発生しました:', error);
+            alert("トークン検証中にエラーが発生しました: " + error.message);
+        });
+    }
+
 
     function fetchItems() {
         fetch('/items', {
