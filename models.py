@@ -10,6 +10,8 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=False, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
+    refresh_token = db.Column(db.String(255), nullable=True)
+    token_expiration = db.Column(db.DateTime, nullable=True)
     items = db.relationship('Item', backref='owner', lazy=True)
 
     def set_password(self, password):
