@@ -53,9 +53,11 @@ def register_page():
 def manage_page():
     return render_template('manage.html')
 
+
 @app.route("/manage/<int:id>", methods=['GET'])
 def detail_page(id):
     return render_template('detailsmanage.html', id=id)
+
 
 @app.route('/notice', methods=['GET'])
 def notice_page():
