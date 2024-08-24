@@ -1,13 +1,7 @@
-document.addEventListener('DOMContentLoaded', function() {
-    let count = 0;
-
-    const counter = document.getElementById('counter');
-    const increment = document.getElementById('increment');
-
-    increment.addEventListener('click', function() {
-        count++;
-        counter.textContent = count;
-    });
+// /manage/<int:id> にアクセスしたときに、そのIDを取得する
+document.addEventListener('DOMContentLoaded', () => {
+    const itemId = document.querySelector('#item-id').getAttribute('data-id');
+    console.log('Item ID:', itemId);
 });
 
 function registerUser(username, email, password) {
