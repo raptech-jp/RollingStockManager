@@ -156,7 +156,7 @@ async function getItems() {
 document.addEventListener('DOMContentLoaded', () => {
     if (window.location.pathname === '/manage') {
         const token = getCookie('token');
-        fetch('/items',{
+        fetch('/items', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -177,13 +177,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     // カード要素を作成
                     const card = document.createElement('div');
                     card.className = 'col-md-4 item-card';
-    
+
                     // 画像の処理
                     const imageUrl = item.image ? item.image : 'placeholder.png';
-    
+
                     // 有効期限の日付形式を変換
                     const expiryDate = new Date(item.expiry_date).toLocaleDateString('ja-JP');
-    
+
                     card.innerHTML = `
                         <div class="card">
                             <div class="card-body">
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             })
             .catch(error => console.error('Error fetching data:', error));
-        }
+    }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -240,5 +240,97 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('エラーが発生しました。');
             }
         });
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.location.pathname === '/notice') {
+        const token = getCookie('token');
+        fetch('/items', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                const noticeContainer = document.getElementById('notice-container');
+                noticeContainer.innerHTML = ''; // 既存の内容をクリア
+
+                // 点検日を定義
+                const checkDates = ['03/01', '06/01', '09/01', '12/01'];
+                const today = new Date();
+                
+                // 点検日が1週間以内かどうかを確認するヘルパー関数
+                function isCheckDateNear(date) {
+                    const checkDate = new Date(date);
+                    checkDate.setFullYear(today.getFullYear());
+
+                    const oneWeekBefore = new Date(checkDate);
+                    oneWeekBefore.setDate(checkDate.getDate() - 7);
+
+                    const oneWeekAfter = new Date(checkDate);
+                    oneWeekAfter.setDate(checkDate.getDate() + 7);
+
+                    return today >= oneWeekBefore && today <= oneWeekAfter;
+                }
+
+                // 通知リストを作成
+                const notifications = [];
+
+                data.forEach(item => {
+                    if (item.is_expiring_soon) {
+                        const expiryDate = new Date(item.expiry_date);
+                        const timeDiff = expiryDate - today;
+                        console.log(expiryDate, today, timeDiff);
+                        const daysToExpire = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+                        
+                        // 有効期限が迫っているアイテムを通知リストに追加
+                        notifications.push({
+                            name: item.name,
+                            daysToExpire,
+                            expiryDate
+                        });
+                    }
+                });
+
+                // 点検日の通知をリストに追加
+                checkDates.forEach(checkDateStr => {
+                    const checkDate = new Date(`${today.getFullYear()}/${checkDateStr}`);
+                    if (isCheckDateNear(checkDate)) {
+                        notifications.push({
+                            name: '防災用品点検',
+                            daysToExpire: null,
+                            checkDate: checkDate
+                        });
+                    }
+                });
+
+                // 有効期限日で降順にソート
+                notifications.sort((a, b) => {
+                    if (b.expiryDate && a.expiryDate) {
+                        return b.expiryDate - a.expiryDate;
+                    }
+                    return (b.checkDate || 0) - (a.checkDate || 0);
+                });
+
+                // 通知をコンテナに追加
+                notifications.forEach(notification => {
+                    const noticeElement = document.createElement('div');
+                    noticeElement.className = 'alert alert-warning';
+                    let message;
+
+                    if (notification.daysToExpire !== null) {
+                        message = `<strong>${notification.name}</strong> - 残り ${notification.daysToExpire} 日です`;
+                    } else if (notification.checkDate) {
+                        message = `<strong>${notification.name}</strong> - ${notification.checkDate.getMonth() + 1}/${notification.checkDate.getDate()} は防災用品点検の日です`;
+                    }
+
+                    noticeElement.innerHTML = message;
+                    noticeContainer.appendChild(noticeElement);
+                });
+            })
+            .catch(error => console.error('アイテムの取得エラー:', error));
     }
 });
