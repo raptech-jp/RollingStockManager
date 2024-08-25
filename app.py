@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, session
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from models import db, User, Item
 from config import Config
 from werkzeug.utils import secure_filename
@@ -32,6 +32,12 @@ def save_refresh_token(user):
 @app.route('/')
 def hello():
     return render_template('index.html')
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 @app.route('/signup', methods=['GET'])
@@ -191,7 +197,7 @@ def add_item():
         quantity=quantity,
         owner=user
     )
-    
+
     db.session.add(item)
     db.session.commit()
 
@@ -208,7 +214,7 @@ def get_items():
     return jsonify([{
         "id": item.id,
         "name": item.name,
-        "image":item.image,
+        "image": item.image,
         "expiry_date": item.expiry_date,
         "location": item.location,
         "quantity": item.quantity,
@@ -254,7 +260,7 @@ def edit_item(item_id):
         # クライアントに公開するパスを設定
         public_image_path = os.path.join('static/uploads', image_filename)
         item.image = public_image_path
-        print(public_image_path,image_filename)
+        print(public_image_path, image_filename)
 
     db.session.commit()
 

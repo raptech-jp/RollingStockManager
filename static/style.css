@@ -15,20 +15,30 @@
     -webkit-box-shadow: 0 0 1px 1px rgba(0, 0, 0, .3);
     display: inline-block;
 }
-#preview img {
+.icon {
+    width: 30px; /* アイコンのサイズを調整 */
+    height: auto;
+}
+
+#preview .icon {
     height: 25vh; /* ウィンドウの高さの30% */
     width: auto; /* アスペクト比を維持するために自動調整 */
     margin: 5px;
     object-fit: contain; /* 画像のサイズをウィンドウに合わせて調整 */
 }
-.btn-secondary {
-    border-radius:30px;
-}
-.text-image-container img {
+
+.text-image-container .icon {
     max-height: 2.0rem;
     width: 2.0rem;
     margin-right: 1rem;
 }
+
+.how2use .icon {
+    width: 30px; /* アイコンのサイズを調整 */
+    height: auto;
+    margin-left: 5%;
+}
+
 
 body {
     font-family: Arial, sans-serif;
