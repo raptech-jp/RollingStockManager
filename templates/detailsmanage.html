@@ -14,40 +14,40 @@
         <input type="button" onclick="location.href='/'" value="ホームへ">
         <p>ID: {{ id }}<span id="item-id" data-id="{{ id }}"></span></p>
         
-        <label>名前<input type="text" id="name"></label><br>
-        <label>使用期限<input type="date" id="expiry-date"></label><br>
-        <label>保管場所<input type="text" id="storage-location"></label><br>
-        <label>個数<input type="text" id="quantity"></label><br>
-        
-        <input type="button" value="変更を保存" id="save-button">
-        <input type="button" value="削除" id="delete-button">
-
+        <div class="d-flex flex-column mb-3">
+            <form id="edit-form" enctype="multipart/form-data">
+                <div class="p-2">
+                    <div class="imagePreview" id="preview"></div>
+                    <label>
+                        <span class="btn btn-custom">
+                            ファイルを選択<input type="file" id="fileInput" style="display:none"
+                                accept="image/png, image/jpeg">
+                        </span>
+                    </label>
+                </div>
+                <div class="p-2">
+                    <label for="name">名前:</label>
+                    <input type="text" id="name" name="name" class="form-control" required>
+                </div>
+                <div class="p-2">
+                    <label for="expiry_date">期限日:</label>
+                    <input type="date" id="expiry_date" name="expiry_date" class="form-control" required>
+                </div>
+                <div class="p-2">
+                    <label for="location">保管場所:</label>
+                    <input type="text" id="location" name="location" class="form-control" required>
+                </div>
+                <div class="p-2">
+                    <label for="quantity">個数:</label>
+                    <input type="number" id="quantity" name="quantity" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">変更を保存</button>
+                <button type="button" value="削除" class="btn btn-danger" id="delete-button">削除</button>
+            </form>
+        </div>        
         <!-- JavaScriptの読み込み -->
+        <script src="{{ url_for('static', filename='filrleader.js') }}"></script>
         <script src="{{ url_for('static', filename='script.js') }}"></script>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const itemId = document.getElementById('item-id').getAttribute('data-id');
-
-            // 保存ボタンのクリックイベント
-            document.getElementById('save-button').addEventListener('click', function() {
-                const name = document.getElementById('name').value;
-                const expiryDate = document.getElementById('expiry-date').value;
-                const storageLocation = document.getElementById('storage-location').value;
-                const quantity = document.getElementById('quantity').value;
-
-                // 必要な処理を追加
-                saveItem(itemId, name, expiryDate, storageLocation, quantity);
-            });
-
-            // 削除ボタンのクリックイベント
-            document.getElementById('delete-button').addEventListener('click', function() {
-                if (confirm('このアイテムを削除してもよろしいですか？')) {
-                    deleteItem(itemId);
-                }
-            });
-        });
-    </script>
 </body>
 </html>

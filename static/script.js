@@ -188,7 +188,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="card">
                             <div class="card-body">
                                 <h5 class="card-title">${item.name}</h5>
-                                <img src="${imageUrl}" alt="${item.name}" class="img-fluid item-image">
+                                <a href="/manage/${item.id}">
+                                    <img src="${imageUrl}" alt="${item.name}" class="img-fluid item-image">
+                                </a>
                                 <p class="card-text">使用期限: ${expiryDate}</p>
                                 <p class="card-text">場所: ${item.location}</p>
                                 <p class="card-text">個数: ${item.quantity}</p>
@@ -231,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (response.ok) {
                     alert('アイテムが正常に追加されました。');
-                    itemForm.reset(); // フォームをリセット
+                    window.location.href = '/manage';
                 } else {
                     alert('アイテムの追加に失敗しました。');
                 }
@@ -242,6 +244,83 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const editForm = document.getElementById('edit-form');
+
+    if (editForm) {
+        editForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const itemId = document.querySelector('#item-id').getAttribute('data-id');
+
+            // FormData オブジェクトの作成
+            const formData = new FormData(editForm);
+
+            // ファイルが選択されている場合は FormData に追加
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length > 0) {
+                formData.append('image', fileInput.files[0]);
+            }
+
+            try {
+                // /items へ POST リクエストを送信
+                const response = await fetch(`/items/${itemId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${getCookie('token')}`,
+                    },
+                    body: formData // FormData オブジェクトを送信
+                });
+
+                if (response.ok) {
+                    alert('正常に変更されました');
+                    window.location.href = '/manage';
+                } else {
+                    alert('変更に失敗しました');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('エラーが発生しました。');
+            }
+        });
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 削除ボタンが存在するかチェック
+    const deleteButton = document.getElementById('delete-button');
+    if (deleteButton) {
+        deleteButton.addEventListener('click', function() {
+            const itemId = document.querySelector('#item-id').getAttribute('data-id');
+            
+            const token = getCookie('token');
+
+            fetch(`/items/${itemId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('削除に失敗しました');
+                }
+            })
+            .then(data => {
+                alert('正常に削除されました');
+                window.location.href = '/manage';
+            })
+            .catch(error => {
+                console.error('エラー:', error);
+                alert('削除に失敗しました。もう一度お試しください。');
+            });
+        });
+    }
+});
+
 
 document.addEventListener('DOMContentLoaded', function () {
     if (window.location.pathname === '/notice') {
@@ -261,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // 点検日を定義
                 const checkDates = ['03/01', '06/01', '09/01', '12/01'];
                 const today = new Date();
-                
+
                 // 点検日が1週間以内かどうかを確認するヘルパー関数
                 function isCheckDateNear(date) {
                     const checkDate = new Date(date);
@@ -280,17 +359,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 const notifications = [];
 
                 data.forEach(item => {
+                    const expiryDate = new Date(item.expiry_date);
+                    const timeDiff = expiryDate - today;
+                    const daysToExpire = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
                     if (item.is_expiring_soon) {
-                        const expiryDate = new Date(item.expiry_date);
-                        const timeDiff = expiryDate - today;
-                        console.log(expiryDate, today, timeDiff);
-                        const daysToExpire = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-                        
                         // 有効期限が迫っているアイテムを通知リストに追加
                         notifications.push({
                             name: item.name,
-                            daysToExpire,
-                            expiryDate
+                            daysToExpire: daysToExpire > 0 ? daysToExpire : '期限切れ',
+                            expiryDate: expiryDate,
+                            className: daysToExpire > 0 ? 'alert-warning' : 'alert-danger'
+                        });
+                    } else if (daysToExpire < 0) {
+                        // 期限切れのアイテムを通知リストに追加
+                        notifications.push({
+                            name: item.name,
+                            daysToExpire: '期限切れ',
+                            expiryDate: expiryDate,
+                            className: 'alert-danger'
                         });
                     }
                 });
@@ -302,7 +389,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         notifications.push({
                             name: '防災用品点検',
                             daysToExpire: null,
-                            checkDate: checkDate
+                            checkDate: checkDate,
+                            className: 'alert-warning'
                         });
                     }
                 });
@@ -318,10 +406,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 // 通知をコンテナに追加
                 notifications.forEach(notification => {
                     const noticeElement = document.createElement('div');
-                    noticeElement.className = 'alert alert-warning';
+                    noticeElement.className = `alert ${notification.className}`;
                     let message;
 
-                    if (notification.daysToExpire !== null) {
+                    if (notification.daysToExpire === '期限切れ') {
+                        message = `<strong>${notification.name}</strong> - 期限切れです`;
+                    } else if (notification.daysToExpire !== null) {
                         message = `<strong>${notification.name}</strong> - 残り ${notification.daysToExpire} 日です`;
                     } else if (notification.checkDate) {
                         message = `<strong>${notification.name}</strong> - ${notification.checkDate.getMonth() + 1}/${notification.checkDate.getDate()} は防災用品点検の日です`;

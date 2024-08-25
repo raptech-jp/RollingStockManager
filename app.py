@@ -226,7 +226,13 @@ def edit_item(item_id):
     if not item or item.user_id != user.id:
         return jsonify({"message": "Item not found or unauthorized"}), 404
 
-    data = request.json
+    if request.content_type.startswith('application/json'):
+        data = request.json
+    elif request.content_type.startswith('multipart/form-data'):
+        data = request.form
+    else:
+        return jsonify({"message": "Unsupported Media Type"}), 415
+
     item.name = data.get('name', item.name)
 
     expiry_date_str = data.get('expiry_date')
@@ -245,7 +251,10 @@ def edit_item(item_id):
         image_filename = secure_filename(image_file.filename)
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
         image_file.save(image_path)
-        item.image = image_path
+        # クライアントに公開するパスを設定
+        public_image_path = os.path.join('static/uploads', image_filename)
+        item.image = public_image_path
+        print(public_image_path,image_filename)
 
     db.session.commit()
 
