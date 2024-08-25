@@ -184,6 +184,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     // 有効期限の日付形式を変換
                     const expiryDate = new Date(item.expiry_date).toLocaleDateString('ja-JP');
 
+                    // 期限が切れているかどうかをチェック
+                    const today = new Date();
+                    const itemExpiryDate = new Date(item.expiry_date);
+                    let expiryStatus = '';
+
+                    if (itemExpiryDate < today) {
+                        expiryStatus = '<span class="badge badge-danger">期限切れ</span>';
+                        card.style.backgroundColor = '#f8d7da'; // 赤背景
+                    } else if (item.is_expiring_soon) {
+                        expiryStatus = '<span class="badge badge-warning">まもなく期限切れ</span>';
+                    }
+
                     card.innerHTML = `
                         <div class="card">
                             <div class="card-body">
@@ -194,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <p class="card-text">使用期限: ${expiryDate}</p>
                                 <p class="card-text">場所: ${item.location}</p>
                                 <p class="card-text">個数: ${item.quantity}</p>
-                                ${item.is_expiring_soon ? '<span class="badge badge-warning">まもなく期限切れ</span>' : ''}
+                                ${expiryStatus}
                             </div>
                         </div>
                     `;
