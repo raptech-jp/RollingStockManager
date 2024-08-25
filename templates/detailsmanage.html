@@ -9,12 +9,19 @@
 </head>
 <body>
     <div class="container">
-        <h1>管理</h1>
+        <div class="container text-center grid gap-0 row-gap-3">
+            <div class="row p-2 g-col-6">
+                <div class="col">
+                    <h1>管理</h1>
+                </div>
+                <div class="col">
+                    <input type="button" onclick="location.href='/'" class="btn btn-light" value="ホームへ">
+                    <p>ID: {{ id }}<span id="item-id" data-id="{{ id }}"></span></p>
+                </div>
+            </div>
+        </div>
         
-        <input type="button" onclick="location.href='/'" value="ホームへ">
-        <p>ID: {{ id }}<span id="item-id" data-id="{{ id }}"></span></p>
-        
-        <div class="d-flex flex-column mb-3">
+        <div class="text-center d-flex flex-column mb-3">
             <form id="edit-form" enctype="multipart/form-data">
                 <div class="p-2">
                     <div class="imagePreview" id="preview"></div>
